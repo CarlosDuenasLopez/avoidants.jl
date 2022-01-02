@@ -16,7 +16,7 @@ Agent(x, y) = Agent(Point2f0(x, y), [], Point2f0(1, 0))
 # Agent(x::Number, y::Number, vx::Number, vy::Number) = Agent(Point2f0(x, y), [], Point2f0(vx, vy))
 Point2f0(a::Agent) = a.posi
 Agent(x, y, vx, vy)=begin
-    speed = 0.3
+    speed = 0.1
     v = [vx, vy] ./ (norm([vx, vy]) / speed)
     Agent(Point2f0(x, y), [], Point2f0(v...))
 end
@@ -45,17 +45,19 @@ end
 
 function path_ok(agent::Agent, all_agents::Vector{Agent})
     # check if current path would intersect one of other paths
-    thresh = 0.1
+    thresh = 0.3
     np = next_point(agent)
     my_line = LineSegment(agent.posi, np)
-    # if dist(Point2f0(0, 0), np) > 30
-    #     return false
-    # end
 
-    if np[1] < -40 || np[1] > 40 || np[2] < -40 || np[2] > 40
+    #= ... CIRCLE BOARDER
+    if dist(Point2f0(0, 0), np) > 30
+        return false
+    end=#
+
+    field_size = 30
+    if np[1] < -field_size || np[1] > field_size || np[2] < -field_size || np[2] > field_size
         return false
     end
-
 
     for other in all_agents
         # if agent != other
@@ -108,16 +110,17 @@ function next_point(agent::Agent)
 end
 
 
-function run(iterations)
-    a1 = Agent(0, 0, 0, 1)
-    a2 = Agent(10, 5, -1, 0)
-    all_agents = [a1, a2]
+function run(iterations, all_agents)
+    # a1 = Agent(0, 0, 0, 1)
+    # a2 = Agent(10, 5, -1, 0)
+    # all_agents = [a1, a2]
     for it in 1:iterations
         for a in all_agents
             step!(a, all_agents)
         end
     end
-    return a1.history, a2.history
+    # return a1.history, a2.history
+    return [x.history for x in all_agents]
 end
 
 
@@ -138,7 +141,7 @@ function movie(hists)
 
     fig, ax, l = lines(running_points[1], color = colors, colormap = :magma,
     axis = (;
-        viewmode = :fit, limits = (-40, 40, -40, 40)))
+        viewmode = :fit, limits = (-30, 30, -30, 30)))
     for r in running_points[2:end]
         lines!(r, color = colors, colormap = :magma)
     end
@@ -146,7 +149,7 @@ function movie(hists)
     hidedecorations!(ax)
     hidespines!(ax)
 
-    record(fig, "lines.gif", 1:1000) do frame
+    record(fig, "lines.gif", 1:300) do frame
         for (i, running) in enumerate(running_points)
             push!(running[], hists[i][frame])
             notify(running)
@@ -156,9 +159,24 @@ function movie(hists)
     end
 end
 
+function circle(num_agents, radius)
+    angle_change = 360/num_agents
+    angle = 0
+    agents = Vector{Agent}()
+    for it in 1:num_agents
+        println("we")
+        x = cosd(angle) * radius
+        y = sind(angle) * radius
+        v = rand(Int, 2)
+        agent = Agent(x, y, v...)
+        println(agent.velocity)
+        push!(agents, agent)
+        angle += angle_change
+    end
+    agents
+end
+
 
 function dist(p1::Point2f0, p2::Point2f0)
     return √((p2[1] - p1[1])^2 + (p2[2] - p1[2])^2)
 end
-
-hists = run(300)
