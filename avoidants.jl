@@ -9,16 +9,17 @@ using Random
 
 mutable struct Agent
     posi::Point2f0
+    change_indeces::Vector{Int64}
     history::Vector{Point2f0}
     velocity::Point2f0
 end
-Agent(x, y) = Agent(Point2f0(x, y), [], Point2f0(1, 0))
+Agent(x, y) = Agent(Point2f0(x, y), [], [], Point2f0(1, 0))
 # Agent(x::Number, y::Number, vx::Number, vy::Number) = Agent(Point2f0(x, y), [], Point2f0(vx, vy))
 Point2f0(a::Agent) = a.posi
-Agent(x, y, vx, vy)=begin
+Agent(x::Real, y::Real, vx::Real, vy::Real)= begin
     speed = 0.1
     v = [vx, vy] ./ (norm([vx, vy]) / speed)
-    Agent(Point2f0(x, y), [], Point2f0(v...))
+    Agent(Point2f0(x, y), [], [], Point2f0(v...))
 end
 
 
@@ -32,6 +33,7 @@ function step!(agent::Agent, all_agents)
             test_agent = change_velocity_by_degs(agent, deg)
             if path_ok(test_agent, all_agents)
                 agent.velocity = test_agent.velocity
+                push!(agent.change_indeces, length(agent.history))
                 push!(agent.history, agent.posi)
                 agent.posi = collect(agent.posi) .+ collect(agent.velocity)
                 return
@@ -60,29 +62,16 @@ function path_ok(agent::Agent, all_agents::Vector{Agent})
     end
 
     for other in all_agents
-        # if agent != other
-            for (i, p) in enumerate(other.history)
-                if dist(np, p) < thresh
-                    return false
-                end
-                if i > 1
-                    other_line = LineSegment(other.history[i-1], p)
-                    if intersects(other_line, my_line)[1]
-                        return false
-                    end
-                end
+        start = 1
+        if length(other.history) > 0
+            for cp in union(other.change_indeces, [length(other.history)])
+                p1, p2 = other.history[start], other.history[cp]
+                intersects(LineSegment(p1, p2), my_line)[1] && return false
+                start = cp
             end
-        # end
+        end
     end
     return true
-end
-
-
-function change_velocity!(agent::Agent)
-    degrees = rand(1:300)
-    rotation_matrix = [cosd(degrees) -sind(degrees); sind(degrees) cosd(degrees)]
-    result_vector = rotation_matrix * collect(agent.velocity)
-    agent.velocity = Point2f0(result_vector...)
 end
 
 
@@ -90,7 +79,7 @@ function change_velocity_by_degs(agent, degrees)
     rotation_matrix = [cosd(degrees) -sind(degrees); sind(degrees) cosd(degrees)]
     result_vector = rotation_matrix * collect(agent.velocity)
     # agent.velocity = Point2f0(result_vector...)
-    return Agent(agent.posi, agent.history, Point2f0(result_vector...))
+    return Agent(agent.posi, [], agent.history, Point2f0(result_vector...))
 end
 
 
@@ -106,7 +95,8 @@ end
 
 
 function next_point(agent::Agent)
-    return agent.posi + agent.velocity
+    factor = 3
+    return agent.posi + agent.velocity * factor
 end
 
 
@@ -164,12 +154,10 @@ function circle(num_agents, radius)
     angle = 0
     agents = Vector{Agent}()
     for it in 1:num_agents
-        println("we")
         x = cosd(angle) * radius
         y = sind(angle) * radius
         v = rand(Int, 2)
         agent = Agent(x, y, v...)
-        println(agent.velocity)
         push!(agents, agent)
         angle += angle_change
     end
