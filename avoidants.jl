@@ -128,14 +128,14 @@ function movie(hists)
 
 
     set_theme!(theme_black())
-
-    fig, ax, l = lines(running_points[1], color = colors, colormap = :magma,
+    
+    fig, ax, l = lines(running_points[1], color = colors, colormap = :magma, figure = (resolution = (600, 600),),
     axis = (;
         viewmode = :fit, limits = (-30, 30, -30, 30)))
     for r in running_points[2:end]
         lines!(r, color = colors, colormap = :magma)
     end
-
+    
     hidedecorations!(ax)
     hidespines!(ax)
 
