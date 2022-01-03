@@ -116,9 +116,7 @@ end
 
 function movie(hists)
     running_points = []
-    colors = Node(Int[])
-    possible_colors = palette(:PuRd_9)
-    push!(colors[], 1)
+    colors = union(palette(:PuRd_9), palette(:RdPu_9), palette(:Blues_6), palette(:BuPu_9))
     for h in hists
         push!(running_points, Node(Point2f0[]))
     end
@@ -130,23 +128,21 @@ function movie(hists)
 
     set_theme!(theme_black())
     
-    fig, ax, l = lines(running_points[1], figure = (resolution = (600, 600),), color=possible_colors[rand(1:length(possible_colors))],
+    fig, ax, l = lines(running_points[1], figure = (resolution = (600, 600),), color=colors[rand(1:length(colors))],
     axis = (;
         viewmode = :fit, limits = (-30, 30, -30, 30)))
     for r in running_points[2:end]
-        lines!(r, color=possible_colors[rand(1:length(possible_colors))])
+        lines!(r, color=colors[rand(1:length(colors))])
     end
     
     hidedecorations!(ax)
     hidespines!(ax)
 
-    record(fig, "lines.gif", 1:300) do frame
+    record(fig, "lines.gif", 1:400) do frame
         for (i, running) in enumerate(running_points)
             push!(running[], hists[i][frame])
             notify(running)
         end
-        push!(colors[], frame)
-        notify(colors)
     end
 end
 
@@ -173,9 +169,9 @@ end
 
 function tester()
     println("generating agents...")
-    agents = circle(250, 15)
+    agents = circle(350, 15)
     println("generating hists...")
-    hists = run(300, agents)
+    hists = run(400, agents)
     println("rendering scene...")
     movie(hists)
 end
