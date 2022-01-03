@@ -27,7 +27,7 @@ function step!(agent::Agent, all_agents)
         push!(agent.history, agent.posi)
         agent.posi = collect(agent.posi) .+ collect(agent.velocity)
     else
-        degrees = shuffle(collect(45:45:315))
+        degrees = shuffle([45, 90, 135, 225, 270, 315])
         for deg in degrees
             test_agent = change_velocity_by_degs(agent, deg)
             if path_ok(test_agent, all_agents)
@@ -62,9 +62,10 @@ function path_ok(agent::Agent, all_agents::Vector{Agent})
     for other in all_agents
         # if agent != other
             for (i, p) in enumerate(other.history)
-                if dist(np, p) < thresh
-                    return false
-                end
+                # if dist(np, p) < thresh
+                #     println("too close")
+                #     return false
+                # end
                 if i > 1
                     other_line = LineSegment(other.history[i-1], p)
                     if intersects(other_line, my_line)[1]
