@@ -6,6 +6,7 @@ using Revise
 using GeometryTypes
 using LinearAlgebra
 using Random
+using Plots:palette
 
 mutable struct Agent
     posi::Point2f0
@@ -17,7 +18,7 @@ Agent(x, y) = Agent(Point2f0(x, y), [], [], Point2f0(1, 0))
 # Agent(x::Number, y::Number, vx::Number, vy::Number) = Agent(Point2f0(x, y), [], Point2f0(vx, vy))
 Point2f0(a::Agent) = a.posi
 Agent(x::Real, y::Real, vx::Real, vy::Real)= begin
-    speed = 0.1
+    speed = 0.3
     v = [vx, vy] ./ (norm([vx, vy]) / speed)
     Agent(Point2f0(x, y), [], [], Point2f0(v...))
 end
@@ -55,7 +56,6 @@ function path_ok(agent::Agent, all_agents::Vector{Agent})
     if dist(Point2f0(0, 0), np) > 30
         return false
     end=#
-
     field_size = 30
     if np[1] < -field_size || np[1] > field_size || np[2] < -field_size || np[2] > field_size
         return false
@@ -117,6 +117,7 @@ end
 function movie(hists)
     running_points = []
     colors = Node(Int[])
+    possible_colors = palette(:PuRd_9)
     push!(colors[], 1)
     for h in hists
         push!(running_points, Node(Point2f0[]))
@@ -129,11 +130,11 @@ function movie(hists)
 
     set_theme!(theme_black())
     
-    fig, ax, l = lines(running_points[1], color = colors, colormap = :magma, figure = (resolution = (600, 600),),
+    fig, ax, l = lines(running_points[1], figure = (resolution = (600, 600),), color=possible_colors[rand(1:length(possible_colors))],
     axis = (;
         viewmode = :fit, limits = (-30, 30, -30, 30)))
     for r in running_points[2:end]
-        lines!(r, color = colors, colormap = :magma)
+        lines!(r, color=possible_colors[rand(1:length(possible_colors))])
     end
     
     hidedecorations!(ax)
@@ -167,4 +168,13 @@ end
 
 function dist(p1::Point2f0, p2::Point2f0)
     return √((p2[1] - p1[1])^2 + (p2[2] - p1[2])^2)
+end
+
+function tester()
+    println("generating agents...")
+    agents = circle(150, 15)
+    println("generating hists...")
+    hists = run(300, agents)
+    println("rendering scene...")
+    movie(hists)
 end
