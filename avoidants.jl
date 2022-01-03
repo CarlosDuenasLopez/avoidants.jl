@@ -157,7 +157,8 @@ function circle(num_agents, radius)
     for it in 1:num_agents
         x = cosd(angle) * radius
         y = sind(angle) * radius
-        v = rand(Int, 2)
+        degrees = rand(0:45:315)
+        v = (sind(degrees), cosd(degrees))
         agent = Agent(x, y, v...)
         push!(agents, agent)
         angle += angle_change
@@ -172,7 +173,7 @@ end
 
 function tester()
     println("generating agents...")
-    agents = circle(150, 15)
+    agents = circle(250, 15)
     println("generating hists...")
     hists = run(300, agents)
     println("rendering scene...")
